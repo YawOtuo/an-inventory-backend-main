@@ -1,8 +1,11 @@
 const { getAllItems, addItem, searchItem, deleteItem, updateItem, getOneItem, getItemsBelowRefillLimit } = require("./item.controllers")
 const express = require('express')
-
+const { authMiddleware } = require('../middleware/auth.middleware')
 
 const router = express.Router()
+
+// All item routes require authentication
+router.use(authMiddleware)
 
 router.get('', getAllItems)
 

@@ -1,4 +1,5 @@
 const express = require('express')
+const { authMiddleware } = require('../middleware/auth.middleware')
 
 const {  addInventory, updateInventory, deleteInventory, getInventorySumByPeriod, getInventoryGeneralSums, getAllInventoryByShop } = require('./controllers')
 
@@ -8,6 +9,9 @@ const { getRecentlySoldItems, getRecentlyRefilledItems,
 
 
 const router = express.Router()
+
+// All inventory routes require authentication
+router.use(authMiddleware)
 
 router.get('/shops/:shopId', getAllInventoryByShop)
 router.get('/general-sums', getInventoryGeneralSums)

@@ -3,6 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('./notification.controllers');
+const { authMiddleware } = require('../middleware/auth.middleware');
+
+// All notification routes require authentication
+router.use(authMiddleware);
 
 // Routes for CRUD operations on notifications
 router.post('/', notificationController.createNotification);

@@ -229,6 +229,10 @@
                     "field": "uid",
                     "seqType": "Sequelize.STRING"
                 },
+                "password": {
+                    "field": "password",
+                    "seqType": "Sequelize.STRING"
+                },
                 "shopId": {
                     "field": "shopId",
                     "allowNull": true,
@@ -270,8 +274,8 @@
             "indexes": []
         }
     },
-    "path": "/home/stez/Desktop/sterl/an-inventory-backend/migrations/_current.json",
-    "backupPath": "/home/stez/Desktop/sterl/an-inventory-backend/migrations/_current_bak.json",
+    "path": "/home/sterl/Desktop/sterl/shelfie/an-inventory-backend-main/migrations/_current.json",
+    "backupPath": "/home/sterl/Desktop/sterl/shelfie/an-inventory-backend-main/migrations/_current_bak.json",
     "exists": true,
-    "revision": 20
+    "revision": 21
 }

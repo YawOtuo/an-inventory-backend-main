@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   User.init({
     username: DataTypes.STRING,
     uid : DataTypes.STRING,
+    password: DataTypes.STRING, // Hashed password
     shopId: DataTypes.INTEGER, // Foreign key referencing the Shop model's id
     acceptedIntoShop: DataTypes.BOOLEAN,
     permission: DataTypes.STRING,

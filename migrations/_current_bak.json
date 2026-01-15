@@ -37,6 +37,17 @@
                     "onUpdate": "CASCADE",
                     "seqType": "Sequelize.INTEGER"
                 },
+                "userId": {
+                    "allowNull": false,
+                    "references": {
+                        "model": "Users",
+                        "key": "id"
+                    },
+                    "field": "userId",
+                    "onDelete": "CASCADE",
+                    "onUpdate": "CASCADE",
+                    "seqType": "Sequelize.INTEGER"
+                },
                 "createdAt": {
                     "allowNull": false,
                     "field": "createdAt",
@@ -46,17 +57,6 @@
                     "allowNull": false,
                     "field": "updatedAt",
                     "seqType": "Sequelize.DATE"
-                },
-                "userId": {
-                    "allowNull": true,
-                    "references": {
-                        "model": "Users",
-                        "key": "id"
-                    },
-                    "onDelete": "CASCADE",
-                    "onUpdate": "CASCADE",
-                    "field": "userId",
-                    "seqType": "Sequelize.INTEGER"
                 },
                 "shopId": {
                     "allowNull": true,
@@ -273,5 +273,5 @@
     "path": "/home/stez/Desktop/sterl/an-inventory-backend/migrations/_current.json",
     "backupPath": "/home/stez/Desktop/sterl/an-inventory-backend/migrations/_current_bak.json",
     "exists": true,
-    "revision": 19
+    "revision": 20
 }

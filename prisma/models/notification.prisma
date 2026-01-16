@@ -1,0 +1,17 @@
+// ============================================
+// Notification Model
+// ============================================
+model Notification {
+  id        Int       @id @default(autoincrement())
+  subject   String?
+  message   String?
+  type      String?
+  read      Boolean?  @default(false)
+  shopId    Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+

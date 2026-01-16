@@ -1,0 +1,21 @@
+// ============================================
+// Inventory Model
+// ============================================
+model Inventory {
+  id        Int       @id @default(autoincrement())
+  action    String?   // refill or sell
+  quantity  Int?
+  date      DateTime?
+  cost      Decimal?  @db.Decimal(10, 2)
+  itemId    Int
+  userId    Int
+  shopId    Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: SetNull)
+}
+

@@ -1,0 +1,125 @@
+// Prisma Schema Base Configuration
+// This file contains the generator and datasource configuration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+// ============================================
+// Inventory Model
+// ============================================
+model Inventory {
+  id        Int       @id @default(autoincrement())
+  action    String?   // refill or sell
+  quantity  Int?
+  date      DateTime?
+  cost      Decimal?  @db.Decimal(10, 2)
+  itemId    Int
+  userId    Int
+  shopId    Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: SetNull)
+}
+
+
+
+// ============================================
+// Item Model
+// ============================================
+model Item {
+  id           Int       @id @default(autoincrement())
+  name         String?
+  category     String?
+  quantity     Int?
+  unit_price   Decimal?  @db.Decimal(10, 2)
+  refill_count Int?
+  description  String?
+  image_url    String?
+  shopId       Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  shop      Shop?        @relation(fields: [shopId], references: [id], onDelete: SetNull)
+  inventory Inventory[]
+}
+
+
+
+// ============================================
+// Notification Model
+// ============================================
+model Notification {
+  id        Int       @id @default(autoincrement())
+  subject   String?
+  message   String?
+  type      String?
+  read      Boolean?  @default(false)
+  shopId    Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+
+
+// ============================================
+// Shop Model
+// ============================================
+model Shop {
+  id          Int       @id @default(autoincrement())
+  name        String?
+  description String?
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  users         User[]
+  items         Item[]
+  inventory     Inventory[]
+  notifications Notification[]
+}
+
+
+
+// ============================================
+// User Model
+// ============================================
+model User {
+  id               Int       @id @default(autoincrement())
+  username         String?
+  uid              String?   @unique
+  password         String?
+  email            String?   @unique
+  phoneNumber      String?
+  shopId           Int?
+  acceptedIntoShop Boolean?  @default(false)
+  permission       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  shop      Shop?        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  inventory Inventory[]
+}
+
+
+

@@ -1,0 +1,16 @@
+// ============================================
+// Shop Model
+// ============================================
+model Shop {
+  id          Int       @id @default(autoincrement())
+  name        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  users         User[]
+  items         Item[]
+  inventory     Inventory[]
+  notifications Notification[]
+}
+

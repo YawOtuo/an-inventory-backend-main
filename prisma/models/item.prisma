@@ -1,0 +1,21 @@
+// ============================================
+// Item Model
+// ============================================
+model Item {
+  id           Int       @id @default(autoincrement())
+  name         String?
+  category     String?
+  quantity     Int?
+  unit_price   Decimal?  @db.Decimal(10, 2)
+  refill_count Int?
+  description  String?
+  image_url    String?
+  shopId       Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  shop      Shop?        @relation(fields: [shopId], references: [id], onDelete: SetNull)
+  inventory Inventory[]
+}
+

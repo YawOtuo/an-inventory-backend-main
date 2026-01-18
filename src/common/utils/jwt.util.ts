@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtUtil {
@@ -9,10 +9,11 @@ export class JwtUtil {
     private configService: ConfigService,
   ) {}
 
-  generateAccessToken(user: { id: number; email: string }) {
+  generateAccessToken(user: { id: number; email: string; shopId?: number | null }) {
     const payload = {
       id: user.id,
       email: user.email,
+      shopId: user.shopId || null,
     };
 
     return this.jwtService.sign(payload, {
@@ -20,10 +21,11 @@ export class JwtUtil {
     });
   }
 
-  generateRefreshToken(user: { id: number; email: string }) {
+  generateRefreshToken(user: { id: number; email: string; shopId?: number | null }) {
     const payload = {
       id: user.id,
       email: user.email,
+      shopId: user.shopId || null,
       type: 'refresh',
     };
 

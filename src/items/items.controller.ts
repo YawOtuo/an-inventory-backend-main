@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, UseInterceptors, HttpCode, HttpStatus, ForbiddenException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ItemsService } from './items.service';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ShopFilterInterceptor } from '../common/interceptors/shop-filter.interceptor';
-import { ShopOwnershipGuard } from '../common/guards/shop-ownership.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ShopOwnershipGuard } from '../common/guards/shop-ownership.guard';
+import { ShopFilterInterceptor } from '../common/interceptors/shop-filter.interceptor';
+import { ItemsService } from './items.service';
 
 @ApiTags('items')
 @Controller('items')
@@ -15,32 +15,31 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all items with pagination (filtered by shop, requires shopId query param)' })
+  @ApiOperation({ summary: 'Get all items with pagination (filtered by shop - uses shopId from token, query, body, or cookies)' })
   @ApiResponse({ status: 200, description: 'List of items' })
   async getAllItems(
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
-    @Query('shopId') shopId?: string,
+    @CurrentUser() user?: any,
+    @Req() req?: any,
   ) {
-    if (!shopId) {
-      throw new ForbiddenException('shopId query parameter is required');
-    }
+    // shopId is automatically set by ShopFilterInterceptor
+    const shopId = (req as any).shopId;
     const pageNum = parseInt(page) || 1;
     const perPageNum = parseInt(perPage) || 10;
-    return this.itemsService.getAllItems(+shopId, pageNum, perPageNum);
+    return this.itemsService.getAllItems(shopId, pageNum, perPageNum);
   }
 
   @Get('search/search')
-  @ApiOperation({ summary: 'Search items by keyword (filtered by shop, requires shopId query param)' })
+  @ApiOperation({ summary: 'Search items by keyword (filtered by shop - uses shopId from token, query, body, or cookies)' })
   @ApiResponse({ status: 200, description: 'Search results' })
   async searchItem(
     @Query('keyword') keyword: string,
-    @Query('shopId') shopId?: string,
+    @Req() req?: any,
   ) {
-    if (!shopId) {
-      throw new ForbiddenException('shopId query parameter is required');
-    }
-    return this.itemsService.searchItem(keyword, +shopId);
+    // shopId is automatically set by ShopFilterInterceptor
+    const shopId = (req as any).shopId;
+    return this.itemsService.searchItem(keyword, shopId);
   }
 
   @Get('op/below-optimum/shops/:shopId')
@@ -62,13 +61,12 @@ export class ItemsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new item (requires shopId in request body)' })
+  @ApiOperation({ summary: 'Create a new item (uses shopId from token, query, body, or cookies)' })
   @ApiResponse({ status: 201, description: 'Item created' })
-  async addItem(@Body() itemData: any) {
-    if (!itemData.shopId) {
-      throw new ForbiddenException('shopId is required in request body');
-    }
-    return this.itemsService.addItem(itemData);
+  async addItem(@Body() itemData: any, @Req() req?: any) {
+    // shopId is automatically set by ShopFilterInterceptor, use it if not in body
+    const shopId = itemData.shopId || (req as any).shopId;
+    return this.itemsService.addItem({ ...itemData, shopId });
   }
 
   @Put(':id')

@@ -1,13 +1,13 @@
 import {
+  BadRequestException,
+  CallHandler,
+  ExecutionContext,
+  ForbiddenException,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { Request } from 'express';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class ShopFilterInterceptor implements NestInterceptor {
@@ -19,11 +19,11 @@ export class ShopFilterInterceptor implements NestInterceptor {
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Get shopId from query params or body
-    const shopId = request.query.shopId || request.body?.shopId;
+    // Get shopId from token first (highest priority), then query params, body, or cookies
+    let shopId = user.shopId || request.query.shopId || request.body?.shopId || request.cookies?.shopId;
 
     if (!shopId) {
-      throw new BadRequestException('shopId is required as query parameter or in request body');
+      throw new BadRequestException('shopId is required. User must be connected to a shop (in token), or provide it as query parameter, in request body, or in cookies');
     }
 
     const shopIdNum = parseInt(shopId.toString());

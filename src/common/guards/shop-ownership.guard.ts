@@ -15,7 +15,8 @@ export class ShopOwnershipGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const itemId = request.params.id;
-    const shopId = request.query?.shopId || request.body?.shopId;
+    // Get shopId from token first, then query params, body, or cookies
+    const shopId = user.shopId || request.query?.shopId || request.body?.shopId || request.cookies?.shopId;
 
     if (!shopId) {
       throw new ForbiddenException('shopId is required');

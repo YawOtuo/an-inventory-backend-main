@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -31,19 +31,23 @@ export class ShopsController {
   @Get('me/current')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get a specific shop by ID for the current user (requires shopId query param)' })
+  @ApiOperation({ summary: 'Get current user\'s shop (uses shopId from token, cookies, or query param)' })
   @ApiResponse({ status: 200, description: 'Shop found' })
   @ApiResponse({ status: 404, description: 'Shop not found or user not associated with shop' })
-  async getCurrentUserShop(@CurrentUser() user: any, @Query('shopId') shopId?: string) {
-    if (!shopId) {
-      throw new NotFoundException('shopId query parameter is required');
+  async getCurrentUserShop(@CurrentUser() user: any, @Query('shopId') shopId?: string, @Req() req?: any) {
+    // Get shopId from query, cookies, or token
+    let finalShopId = shopId || req?.cookies?.shopId || user.shopId;
+    
+    if (!finalShopId) {
+      throw new NotFoundException('shopId is required. Provide it as query parameter, in cookies, or user must be connected to a shop');
     }
-    const shop = await this.shopsService.getShopById(+shopId);
+    
+    const shop = await this.shopsService.getShopById(+finalShopId);
     
     // Verify user belongs to this shop
     const userShops = await this.shopsService.getUserShops(user.id);
     const userShopIds = userShops.map(s => s.id);
-    if (!userShopIds.includes(+shopId)) {
+    if (!userShopIds.includes(+finalShopId)) {
       throw new NotFoundException('User is not associated with this shop');
     }
     

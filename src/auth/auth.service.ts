@@ -40,10 +40,17 @@ export class AuthService {
       },
     });
 
+    // Get user's first shop (if any)
+    const firstUserShop = await this.prisma.userShop.findFirst({
+      where: { userId: newUser.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
     // Generate tokens
     const userData = {
       id: newUser.id,
       email: newUser.email,
+      shopId: firstUserShop?.shopId || null,
     };
 
     const accessToken = this.jwtUtil.generateAccessToken(userData);
@@ -83,10 +90,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // Get user's first shop (if any)
+    const firstUserShop = await this.prisma.userShop.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
     // Generate tokens
     const userData = {
       id: user.id,
       email: user.email,
+      shopId: firstUserShop?.shopId || null,
     };
 
     const accessToken = this.jwtUtil.generateAccessToken(userData);
@@ -124,10 +138,21 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    // Get user's first shop (if any) - use from token if available, otherwise fetch
+    let shopId = decoded.shopId || null;
+    if (!shopId) {
+      const firstUserShop = await this.prisma.userShop.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'asc' },
+      });
+      shopId = firstUserShop?.shopId || null;
+    }
+
     // Generate new access token
     const userData = {
       id: user.id,
       email: user.email,
+      shopId: shopId,
     };
 
     const accessToken = this.jwtUtil.generateAccessToken(userData);
@@ -242,12 +267,24 @@ export class AuthService {
         },
       });
 
+      // Generate new tokens with updated shopId
+      const userData = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        shopId: shopId,
+      };
+
+      const accessToken = this.jwtUtil.generateAccessToken(userData);
+      const refreshToken = this.jwtUtil.generateRefreshToken(userData);
+
       return {
         message: 'User is already connected to this shop',
         user: {
           ...updatedUser,
           shopId: shopId,
         },
+        accessToken,
+        refreshToken,
       };
     }
 
@@ -275,12 +312,24 @@ export class AuthService {
       },
     });
 
+    // Generate new tokens with updated shopId
+    const userData = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      shopId: shopId,
+    };
+
+    const accessToken = this.jwtUtil.generateAccessToken(userData);
+    const refreshToken = this.jwtUtil.generateRefreshToken(userData);
+
     return {
       message: 'Successfully connected to shop',
       user: {
         ...updatedUser,
         shopId: shopId,
       },
+      accessToken,
+      refreshToken,
     };
   }
 }

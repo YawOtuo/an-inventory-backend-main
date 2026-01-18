@@ -8,7 +8,7 @@ model Shop {
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  users         User[]
+  userShops     UserShop[]
   items         Item[]
   inventory     Inventory[]
   notifications Notification[]

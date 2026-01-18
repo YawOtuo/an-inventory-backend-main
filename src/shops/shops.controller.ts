@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -20,6 +20,45 @@ export class ShopsController {
     return this.shopsService.getAllShops();
   }
 
+  @Get('verify/:name')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Verify shop by name' })
+  @ApiResponse({ status: 200, description: 'Shop verification result' })
+  async verifyShopByName(@Param('name') name: string) {
+    return this.shopsService.verifyShopByName(name);
+  }
+
+  @Get('me/current')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get a specific shop by ID for the current user (requires shopId query param)' })
+  @ApiResponse({ status: 200, description: 'Shop found' })
+  @ApiResponse({ status: 404, description: 'Shop not found or user not associated with shop' })
+  async getCurrentUserShop(@CurrentUser() user: any, @Query('shopId') shopId?: string) {
+    if (!shopId) {
+      throw new NotFoundException('shopId query parameter is required');
+    }
+    const shop = await this.shopsService.getShopById(+shopId);
+    
+    // Verify user belongs to this shop
+    const userShops = await this.shopsService.getUserShops(user.id);
+    const userShopIds = userShops.map(s => s.id);
+    if (!userShopIds.includes(+shopId)) {
+      throw new NotFoundException('User is not associated with this shop');
+    }
+    
+    return shop;
+  }
+
+  @Get('me/shops')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all shops belonging to the current user' })
+  @ApiResponse({ status: 200, description: 'List of user\'s shops' })
+  async getUserShops(@CurrentUser() user: any) {
+    return this.shopsService.getUserShops(user.id);
+  }
+
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Get shop by ID' })
@@ -29,14 +68,6 @@ export class ShopsController {
     return this.shopsService.getShopById(+id);
   }
 
-  @Get('verify/:name')
-  @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: 'Verify shop by name' })
-  @ApiResponse({ status: 200, description: 'Shop verification result' })
-  async verifyShopByName(@Param('name') name: string) {
-    return this.shopsService.verifyShopByName(name);
-  }
-
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -44,19 +75,6 @@ export class ShopsController {
   @ApiResponse({ status: 201, description: 'Shop created and user connected' })
   async createShop(@Body() createShopDto: CreateShopDto, @CurrentUser() user: any) {
     return this.shopsService.createShop(createShopDto, user.id);
-  }
-
-  @Get('me/current')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user\'s shop' })
-  @ApiResponse({ status: 200, description: 'Current user\'s shop' })
-  @ApiResponse({ status: 404, description: 'User has no shop' })
-  async getCurrentUserShop(@CurrentUser() user: any) {
-    if (!user.shopId) {
-      throw new NotFoundException('User is not associated with any shop');
-    }
-    return this.shopsService.getShopById(user.shopId);
   }
 
   @Put(':id')

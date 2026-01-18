@@ -83,16 +83,11 @@ model Notification {
 model Shop {
   id          Int       @id @default(autoincrement())
   name        String?
-  description String?
-  address     String?
-  phone       String?
-  email       String?
-  website     String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  users         User[]
+  userShops     UserShop[]
   items         Item[]
   inventory     Inventory[]
   notifications Notification[]
@@ -101,24 +96,42 @@ model Shop {
 
 
 // ============================================
-// User Model
+// UserShop Model (Join Table)
 // ============================================
-model User {
+model UserShop {
   id               Int       @id @default(autoincrement())
-  username         String?
-  uid              String?   @unique
-  password         String?
-  email            String?   @unique
-  phoneNumber      String?
-  shopId           Int?
+  userId           Int
+  shopId           Int
   acceptedIntoShop Boolean?  @default(false)
   permission       String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   // Relations
-  shop      Shop?        @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  inventory Inventory[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, shopId])
+}
+
+
+// ============================================
+// User Model
+// ============================================
+model User {
+  id          Int       @id @default(autoincrement())
+  username    String?
+  uid         String?   @unique
+  password    String?
+  email       String?   @unique
+  phoneNumber String?
+  permission  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  userShops  UserShop[]
+  inventory  Inventory[]
 }
 
 

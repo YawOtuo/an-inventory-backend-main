@@ -2,20 +2,18 @@
 // User Model
 // ============================================
 model User {
-  id               Int       @id @default(autoincrement())
-  username         String?
-  uid              String?   @unique
-  password         String?
-  email            String?   @unique
-  phoneNumber      String?
-  shopId           Int?
-  acceptedIntoShop Boolean?  @default(false)
-  permission       String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id          Int       @id @default(autoincrement())
+  username    String?
+  uid         String?   @unique
+  password    String?
+  email       String?   @unique
+  phoneNumber String?
+  permission  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
-  shop      Shop?        @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  inventory Inventory[]
+  userShops  UserShop[]
+  inventory  Inventory[]
 }
 

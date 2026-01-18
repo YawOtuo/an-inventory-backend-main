@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,17 +26,23 @@ export class UsersController {
   }
 
   @Get(':id/accept')
-  @ApiOperation({ summary: 'Accept user into shop' })
+  @ApiOperation({ summary: 'Accept user into shop (requires shopId query param)' })
   @ApiResponse({ status: 200, description: 'User accepted' })
-  async acceptUser(@Param('id') id: string) {
-    return this.usersService.acceptUser(+id);
+  async acceptUser(@Param('id') id: string, @Query('shopId') shopId?: string) {
+    if (!shopId) {
+      throw new BadRequestException('shopId query parameter is required');
+    }
+    return this.usersService.acceptUser(+id, +shopId);
   }
 
   @Get(':id/de-accept')
-  @ApiOperation({ summary: 'De-accept user from shop' })
+  @ApiOperation({ summary: 'De-accept user from shop (requires shopId query param)' })
   @ApiResponse({ status: 200, description: 'User de-accepted' })
-  async deacceptUser(@Param('id') id: string) {
-    return this.usersService.deacceptUser(+id);
+  async deacceptUser(@Param('id') id: string, @Query('shopId') shopId?: string) {
+    if (!shopId) {
+      throw new BadRequestException('shopId query parameter is required');
+    }
+    return this.usersService.deacceptUser(+id, +shopId);
   }
 
   @Get('getUserByUid/:uid')

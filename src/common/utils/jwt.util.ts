@@ -9,11 +9,10 @@ export class JwtUtil {
     private configService: ConfigService,
   ) {}
 
-  generateAccessToken(user: { id: number; email: string; shopId?: number | null }) {
+  generateAccessToken(user: { id: number; email: string }) {
     const payload = {
       id: user.id,
       email: user.email,
-      shopId: user.shopId || null,
     };
 
     return this.jwtService.sign(payload, {
@@ -21,11 +20,10 @@ export class JwtUtil {
     });
   }
 
-  generateRefreshToken(user: { id: number; email: string; shopId?: number | null }) {
+  generateRefreshToken(user: { id: number; email: string }) {
     const payload = {
       id: user.id,
       email: user.email,
-      shopId: user.shopId || null,
       type: 'refresh',
     };
 

@@ -15,26 +15,32 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all items with pagination (filtered by shop)' })
+  @ApiOperation({ summary: 'Get all items with pagination (filtered by shop, requires shopId query param)' })
   @ApiResponse({ status: 200, description: 'List of items' })
   async getAllItems(
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
-    @CurrentUser() user?: any,
+    @Query('shopId') shopId?: string,
   ) {
+    if (!shopId) {
+      throw new ForbiddenException('shopId query parameter is required');
+    }
     const pageNum = parseInt(page) || 1;
     const perPageNum = parseInt(perPage) || 10;
-    return this.itemsService.getAllItems(user.shopId, pageNum, perPageNum);
+    return this.itemsService.getAllItems(+shopId, pageNum, perPageNum);
   }
 
   @Get('search/search')
-  @ApiOperation({ summary: 'Search items by keyword (filtered by shop)' })
+  @ApiOperation({ summary: 'Search items by keyword (filtered by shop, requires shopId query param)' })
   @ApiResponse({ status: 200, description: 'Search results' })
   async searchItem(
     @Query('keyword') keyword: string,
-    @CurrentUser() user?: any,
+    @Query('shopId') shopId?: string,
   ) {
-    return this.itemsService.searchItem(keyword, user.shopId);
+    if (!shopId) {
+      throw new ForbiddenException('shopId query parameter is required');
+    }
+    return this.itemsService.searchItem(keyword, +shopId);
   }
 
   @Get('op/below-optimum/shops/:shopId')
@@ -42,12 +48,7 @@ export class ItemsController {
   @ApiResponse({ status: 200, description: 'List of items below refill limit' })
   async getItemsBelowRefillLimit(
     @Param('shopId') shopId: string,
-    @CurrentUser() user?: any,
   ) {
-    // Verify user's shopId matches param
-    if (user.shopId !== parseInt(shopId)) {
-      throw new ForbiddenException('Access denied');
-    }
     return this.itemsService.getItemsBelowRefillLimit(+shopId);
   }
 
@@ -61,11 +62,13 @@ export class ItemsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new item' })
+  @ApiOperation({ summary: 'Create a new item (requires shopId in request body)' })
   @ApiResponse({ status: 201, description: 'Item created' })
-  async addItem(@Body() itemData: any, @CurrentUser() user?: any) {
-    // Automatically set shopId from user
-    return this.itemsService.addItem({ ...itemData, shopId: user.shopId });
+  async addItem(@Body() itemData: any) {
+    if (!itemData.shopId) {
+      throw new ForbiddenException('shopId is required in request body');
+    }
+    return this.itemsService.addItem(itemData);
   }
 
   @Put(':id')

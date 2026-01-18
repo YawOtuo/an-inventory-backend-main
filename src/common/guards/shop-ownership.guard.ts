@@ -15,12 +15,13 @@ export class ShopOwnershipGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const itemId = request.params.id;
+    const shopId = request.query?.shopId || request.body?.shopId;
 
-    if (!user?.shopId) {
-      throw new ForbiddenException('User is not associated with any shop');
+    if (!shopId) {
+      throw new ForbiddenException('shopId is required');
     }
 
-    // Check if item exists and belongs to user's shop
+    // Check if item exists and belongs to the specified shop
     const item = await this.prisma.item.findUnique({
       where: { id: parseInt(itemId) },
       select: { shopId: true },
@@ -30,8 +31,22 @@ export class ShopOwnershipGuard implements CanActivate {
       throw new NotFoundException('Item not found');
     }
 
-    if (item.shopId !== user.shopId) {
-      throw new ForbiddenException('You do not have access to this item');
+    if (item.shopId !== parseInt(shopId)) {
+      throw new ForbiddenException('Item does not belong to the specified shop');
+    }
+
+    // Check if user belongs to this shop
+    const userShop = await this.prisma.userShop.findUnique({
+      where: {
+        userId_shopId: {
+          userId: user.id,
+          shopId: parseInt(shopId),
+        },
+      },
+    });
+
+    if (!userShop) {
+      throw new ForbiddenException('User is not associated with this shop');
     }
 
     return true;

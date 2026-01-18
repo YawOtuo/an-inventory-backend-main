@@ -31,9 +31,9 @@ export class ShopsService {
 
     // Automatically connect the user who created the shop to it
     // and set them as accepted since they're the creator
-    await this.prisma.user.update({
-      where: { id: userId },
+    await this.prisma.userShop.create({
       data: {
+        userId: userId,
         shopId: shop.id,
         acceptedIntoShop: true, // Creator is automatically accepted
       },
@@ -72,63 +72,90 @@ export class ShopsService {
   }
 
   async getShopUsers(shopId: number) {
-    return this.prisma.user.findMany({
+    const userShops = await this.prisma.userShop.findMany({
       where: { shopId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        phoneNumber: true,
-        shopId: true,
-        acceptedIntoShop: true,
-        permission: true,
-        uid: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            phoneNumber: true,
+            permission: true,
+            uid: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
+
+    return userShops.map(us => ({
+      ...us.user,
+      shopId: us.shopId,
+      acceptedIntoShop: us.acceptedIntoShop,
+      permission: us.permission || us.user.permission,
+    }));
   }
 
   async getShopAcceptedUsers(shopId: number) {
-    return this.prisma.user.findMany({
+    const userShops = await this.prisma.userShop.findMany({
       where: {
         shopId,
         acceptedIntoShop: true,
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        phoneNumber: true,
-        shopId: true,
-        acceptedIntoShop: true,
-        permission: true,
-        uid: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            phoneNumber: true,
+            permission: true,
+            uid: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
+
+    return userShops.map(us => ({
+      ...us.user,
+      shopId: us.shopId,
+      acceptedIntoShop: us.acceptedIntoShop,
+      permission: us.permission || us.user.permission,
+    }));
   }
 
   async getShopUnacceptedUsers(shopId: number) {
-    return this.prisma.user.findMany({
+    const userShops = await this.prisma.userShop.findMany({
       where: {
         shopId,
         acceptedIntoShop: false,
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        phoneNumber: true,
-        shopId: true,
-        acceptedIntoShop: true,
-        permission: true,
-        uid: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            phoneNumber: true,
+            permission: true,
+            uid: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
+
+    return userShops.map(us => ({
+      ...us.user,
+      shopId: us.shopId,
+      acceptedIntoShop: us.acceptedIntoShop,
+      permission: us.permission || us.user.permission,
+    }));
   }
 
   async verifyShopByName(name: string) {
@@ -141,6 +168,15 @@ export class ShopsService {
     } else {
       return { exists: false, message: 'Shop does not exist in the database' };
     }
+  }
+
+  async getUserShops(userId: number) {
+    const userShops = await this.prisma.userShop.findMany({
+      where: { userId },
+      include: { shop: true },
+    });
+
+    return userShops.map(us => us.shop);
   }
 }
 

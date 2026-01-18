@@ -37,8 +37,6 @@ export class AuthService {
         email,
         password: hashedPassword,
         phoneNumber: phoneNumber || null,
-        acceptedIntoShop: false,
-        shopId: null,
       },
     });
 
@@ -46,7 +44,6 @@ export class AuthService {
     const userData = {
       id: newUser.id,
       email: newUser.email,
-      shopId: newUser.shopId,
     };
 
     const accessToken = this.jwtUtil.generateAccessToken(userData);
@@ -90,7 +87,6 @@ export class AuthService {
     const userData = {
       id: user.id,
       email: user.email,
-      shopId: user.shopId,
     };
 
     const accessToken = this.jwtUtil.generateAccessToken(userData);
@@ -132,7 +128,6 @@ export class AuthService {
     const userData = {
       id: user.id,
       email: user.email,
-      shopId: user.shopId,
     };
 
     const accessToken = this.jwtUtil.generateAccessToken(userData);
@@ -152,8 +147,6 @@ export class AuthService {
         username: true,
         email: true,
         phoneNumber: true,
-        shopId: true,
-        acceptedIntoShop: true,
         permission: true,
         uid: true,
         createdAt: true,
@@ -223,20 +216,58 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Update user's shopId
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
+    // Check if user is already connected to this shop
+    const existingUserShop = await this.prisma.userShop.findUnique({
+      where: {
+        userId_shopId: {
+          userId: userId,
+          shopId: shopId,
+        },
+      },
+    });
+
+    if (existingUserShop) {
+      // Return success if already connected
+      const updatedUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          phoneNumber: true,
+          permission: true,
+          uid: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      return {
+        message: 'User is already connected to this shop',
+        user: {
+          ...updatedUser,
+          shopId: shopId,
+        },
+      };
+    }
+
+    // Create UserShop relationship
+    await this.prisma.userShop.create({
       data: {
+        userId: userId,
         shopId: shopId,
         acceptedIntoShop: false, // Pending approval
       },
+    });
+
+    // Get updated user with shops
+    const updatedUser = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         username: true,
         email: true,
         phoneNumber: true,
-        shopId: true,
-        acceptedIntoShop: true,
         permission: true,
         uid: true,
         createdAt: true,
@@ -246,7 +277,10 @@ export class AuthService {
 
     return {
       message: 'Successfully connected to shop',
-      user: updatedUser,
+      user: {
+        ...updatedUser,
+        shopId: shopId,
+      },
     };
   }
 }

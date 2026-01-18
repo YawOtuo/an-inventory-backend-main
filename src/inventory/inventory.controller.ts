@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -25,10 +25,13 @@ export class InventoryController {
   }
 
   @Get('general-sums')
-  @ApiOperation({ summary: 'Get inventory general sums (day, week, month) filtered by shop' })
+  @ApiOperation({ summary: 'Get inventory general sums (day, week, month) filtered by shop (requires shopId query param)' })
   @ApiResponse({ status: 200, description: 'General sums' })
-  async getInventoryGeneralSums(@CurrentUser() user?: any) {
-    return this.inventoryService.getInventoryGeneralSums(user.shopId);
+  async getInventoryGeneralSums(@Query('shopId') shopId?: string) {
+    if (!shopId) {
+      throw new ForbiddenException('shopId query parameter is required');
+    }
+    return this.inventoryService.getInventoryGeneralSums(+shopId);
   }
 
   @Get('recently-sold/shops/:shopId')
